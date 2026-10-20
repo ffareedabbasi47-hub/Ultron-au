@@ -254,14 +254,24 @@ fun UltronCompactTopBar(
  * Displays outer glowing rings, counter-rotating segmented arcs, inner equalizer waveform bars,
  * spaced core title ("U.L.T.R.O.N" or "M.A.X"), "AI ASSISTANT" subtitle, and live state badge.
  */
+/**
+ * Compact, High-Tech Animated MAX Core:
+ * Communicates actual system states:
+ * - IDLE: "MAX READY" with subtle breathing animation
+ * - LISTENING: "LISTENING" with real microphone waveform and animated pulsing ring
+ * - THINKING: "THINKING..." with intelligence processing orbital arcs
+ * - EXECUTING: "EXECUTING" with forward task execution sweep
+ * - SPEAKING: "SPEAKING" with speech amplitude pulse
+ * - ERROR: Clear alert state
+ */
 @Composable
 fun UltronAnimatedCore(
     coreState: AssistantCoreState,
     micAmplitude: Float,
     avatarId: String,
     reducedMotion: Boolean,
-    activePersona: AssistantPersona = AssistantPersona.ULTRON,
-    coreSize: Dp = 196.dp,
+    activePersona: AssistantPersona = AssistantPersona.MAX,
+    coreSize: Dp = 124.dp,
     onCoreTap: () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "ultron_core_transition")
@@ -272,9 +282,9 @@ fun UltronAnimatedCore(
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = when (coreState) {
-                    AssistantCoreState.THINKING, AssistantCoreState.EXECUTING -> 2600
-                    AssistantCoreState.LISTENING, AssistantCoreState.SPEAKING -> 4000
-                    else -> 10000
+                    AssistantCoreState.THINKING, AssistantCoreState.EXECUTING -> 2200
+                    AssistantCoreState.LISTENING, AssistantCoreState.SPEAKING -> 3600
+                    else -> 9000
                 },
                 easing = LinearEasing
             ),
@@ -284,15 +294,15 @@ fun UltronAnimatedCore(
     )
 
     val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.94f,
-        targetValue = if (reducedMotion) 0.96f else 1.06f,
+        initialValue = 0.96f,
+        targetValue = if (reducedMotion) 0.98f else 1.04f,
         animationSpec = infiniteRepeatable(
             animation = tween(
                 durationMillis = when (coreState) {
-                    AssistantCoreState.SPEAKING -> 420
-                    AssistantCoreState.LISTENING -> 520
-                    AssistantCoreState.THINKING, AssistantCoreState.EXECUTING -> 680
-                    else -> 2200
+                    AssistantCoreState.SPEAKING -> 380
+                    AssistantCoreState.LISTENING -> 460
+                    AssistantCoreState.THINKING, AssistantCoreState.EXECUTING -> 620
+                    else -> 2600 // Subtle breathing in IDLE
                 },
                 easing = FastOutSlowInEasing
             ),
@@ -302,7 +312,7 @@ fun UltronAnimatedCore(
     )
 
     val primaryRingColor = when (coreState) {
-        AssistantCoreState.IDLE -> if (activePersona == AssistantPersona.MAX) UltronEmerald else UltronCyan
+        AssistantCoreState.IDLE -> UltronEmerald
         AssistantCoreState.WAKE_DETECTED, AssistantCoreState.LISTENING -> UltronCyan
         AssistantCoreState.TRANSCRIBING, AssistantCoreState.THINKING -> UltronViolet
         AssistantCoreState.EXECUTING -> UltronGold
@@ -311,10 +321,11 @@ fun UltronAnimatedCore(
         AssistantCoreState.PAUSED, AssistantCoreState.SLEEP_ARMED -> UltronTextMuted
     }
 
-    val secondaryArcColor = when {
-        activePersona == AssistantPersona.MAX -> UltronCyan
-        avatarId == "mark_x_sentinel" -> UltronCrimson
-        else -> Color(0xFFEC4899) // Reference magenta/pink accent arc
+    val secondaryArcColor = when (coreState) {
+        AssistantCoreState.THINKING -> UltronCyan
+        AssistantCoreState.EXECUTING -> UltronEmerald
+        AssistantCoreState.ERROR, AssistantCoreState.PERMISSION_BLOCKED -> UltronGold
+        else -> UltronCyan
     }
 
     Column(
@@ -331,17 +342,17 @@ fun UltronAnimatedCore(
                 val center = Offset(size.width / 2f, size.height / 2f)
                 val maxR = size.minDimension / 2f
                 val activeBoost = when (coreState) {
-                    AssistantCoreState.LISTENING -> (micAmplitude * 0.20f).coerceIn(0f, 0.22f)
-                    AssistantCoreState.SPEAKING -> 0.12f
+                    AssistantCoreState.LISTENING -> (micAmplitude * 0.18f).coerceIn(0f, 0.20f)
+                    AssistantCoreState.SPEAKING -> 0.10f
                     else -> 0f
                 }
 
-                // 1. Soft Ambient Outer Halo
+                // 1. Soft Ambient Outer Glow
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            primaryRingColor.copy(alpha = 0.22f),
-                            secondaryArcColor.copy(alpha = 0.10f),
+                            primaryRingColor.copy(alpha = if (coreState == AssistantCoreState.IDLE) 0.14f else 0.25f),
+                            secondaryArcColor.copy(alpha = 0.08f),
                             Color.Transparent
                         ),
                         center = center,
@@ -350,54 +361,55 @@ fun UltronAnimatedCore(
                     radius = maxR
                 )
 
-                // 2. Outer Thin Orbit Ring with Orbital Nodes
+                // 2. Outer Thin Orbit Ring with Nodes
                 drawCircle(
-                    color = primaryRingColor.copy(alpha = 0.24f),
+                    color = primaryRingColor.copy(alpha = 0.28f),
                     radius = maxR * 0.92f,
                     center = center,
                     style = Stroke(width = 1.dp.toPx())
                 )
 
-                rotate(degrees = rotationSlow * 0.6f, pivot = center) {
-                    val nodeAngles = listOf(35f, 155f, 275f)
+                // Orbital Node points
+                rotate(degrees = rotationSlow * 0.7f, pivot = center) {
+                    val nodeAngles = listOf(40f, 160f, 280f)
                     nodeAngles.forEachIndexed { idx, deg ->
                         val rad = Math.toRadians(deg.toDouble())
                         val nx = center.x + (maxR * 0.92f * cos(rad)).toFloat()
                         val ny = center.y + (maxR * 0.92f * sin(rad)).toFloat()
                         drawCircle(
                             color = if (idx % 2 == 0) primaryRingColor else secondaryArcColor,
-                            radius = 3.5.dp.toPx(),
+                            radius = 2.8.dp.toPx(),
                             center = Offset(nx, ny)
                         )
                     }
                 }
 
-                // 3. Primary Cyan/Emerald Sweeping Arcs
+                // 3. Sweeping Arcs
                 rotate(degrees = rotationSlow, pivot = center) {
                     for (i in 0 until 2) {
                         drawArc(
                             color = primaryRingColor.copy(alpha = 0.85f),
                             startAngle = i * 180f + 15f,
-                            sweepAngle = 110f,
+                            sweepAngle = if (coreState == AssistantCoreState.EXECUTING) 130f else 100f,
                             useCenter = false,
-                            topLeft = Offset(center.x - maxR * 0.80f, center.y - maxR * 0.80f),
-                            size = Size(maxR * 1.60f, maxR * 1.60f),
-                            style = Stroke(width = 3.2.dp.toPx(), cap = StrokeCap.Round)
+                            topLeft = Offset(center.x - maxR * 0.82f, center.y - maxR * 0.82f),
+                            size = Size(maxR * 1.64f, maxR * 1.64f),
+                            style = Stroke(width = 2.6.dp.toPx(), cap = StrokeCap.Round)
                         )
                     }
                 }
 
-                // 4. Secondary Magenta/Pink Counter-Rotating Arcs (Matches Reference Core!)
-                rotate(degrees = -rotationSlow * 1.25f, pivot = center) {
+                // 4. Counter-Rotating Arcs
+                rotate(degrees = -rotationSlow * 1.2f, pivot = center) {
                     for (i in 0 until 2) {
                         drawArc(
-                            color = secondaryArcColor.copy(alpha = 0.80f),
-                            startAngle = i * 180f + 75f,
-                            sweepAngle = 95f,
+                            color = secondaryArcColor.copy(alpha = 0.75f),
+                            startAngle = i * 180f + 70f,
+                            sweepAngle = 85f,
                             useCenter = false,
-                            topLeft = Offset(center.x - maxR * 0.72f, center.y - maxR * 0.72f),
-                            size = Size(maxR * 1.44f, maxR * 1.44f),
-                            style = Stroke(width = 2.6.dp.toPx(), cap = StrokeCap.Round)
+                            topLeft = Offset(center.x - maxR * 0.74f, center.y - maxR * 0.74f),
+                            size = Size(maxR * 1.48f, maxR * 1.48f),
+                            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
                         )
                     }
                 }
@@ -410,106 +422,201 @@ fun UltronAnimatedCore(
                             UltronObsidian
                         ),
                         center = center,
-                        radius = maxR * 0.62f
+                        radius = maxR * 0.64f
                     ),
-                    radius = maxR * 0.62f,
+                    radius = maxR * 0.64f,
                     center = center
                 )
                 drawCircle(
-                    color = primaryRingColor.copy(alpha = 0.45f),
-                    radius = maxR * 0.62f,
+                    color = primaryRingColor.copy(alpha = 0.50f),
+                    radius = maxR * 0.64f,
                     center = center,
-                    style = Stroke(width = 1.5.dp.toPx())
+                    style = Stroke(width = 1.4.dp.toPx())
                 )
 
-                // 6. Vertical Equalizer Waveform Bars in Upper-Center of Core
-                val barCount = 9
-                val totalBarsWidth = maxR * 0.56f
-                val spacing = totalBarsWidth / (barCount - 1)
-                val startX = center.x - totalBarsWidth / 2f
-                val barCenterY = center.y - maxR * 0.16f
+                // 6. Microphone Waveform bars when LISTENING or SPEAKING
+                if (coreState == AssistantCoreState.LISTENING || coreState == AssistantCoreState.SPEAKING) {
+                    val barCount = 7
+                    val totalBarsWidth = maxR * 0.50f
+                    val spacing = totalBarsWidth / (barCount - 1)
+                    val startX = center.x - totalBarsWidth / 2f
+                    val barCenterY = center.y - maxR * 0.20f
 
-                for (b in 0 until barCount) {
-                    val distFromCenter = 1f - (abs(b - barCount / 2f) / (barCount / 2f))
-                    val animatedWave = when (coreState) {
-                        AssistantCoreState.LISTENING -> {
-                            (0.25f + micAmplitude * 0.75f * abs(sin(rotationSlow * 0.09f + b))).coerceIn(0.2f, 1f)
+                    for (b in 0 until barCount) {
+                        val distFromCenter = 1f - (abs(b - barCount / 2f) / (barCount / 2f))
+                        val animatedWave = if (coreState == AssistantCoreState.LISTENING) {
+                            (0.20f + micAmplitude * 0.80f * abs(sin(rotationSlow * 0.1f + b))).coerceIn(0.18f, 1f)
+                        } else {
+                            (0.25f + 0.60f * abs(cos(rotationSlow * 0.12f + b * 0.8f))).coerceIn(0.20f, 0.95f)
                         }
-                        AssistantCoreState.SPEAKING, AssistantCoreState.THINKING, AssistantCoreState.EXECUTING -> {
-                            (0.30f + 0.65f * abs(cos(rotationSlow * 0.11f + b * 0.7f))).coerceIn(0.22f, 1f)
-                        }
-                        else -> {
-                            (0.28f + 0.45f * distFromCenter * pulseScale).coerceIn(0.22f, 0.85f)
-                        }
+                        val barHeight = maxR * 0.24f * animatedWave
+                        val barColor = if (b % 2 == 0) primaryRingColor else secondaryArcColor
+                        drawRoundRect(
+                            color = barColor,
+                            topLeft = Offset(startX + b * spacing - 1.5.dp.toPx(), barCenterY - barHeight / 2f),
+                            size = Size(3.dp.toPx(), barHeight),
+                            cornerRadius = CornerRadius(3f, 3f)
+                        )
                     }
-                    val barHeight = maxR * 0.28f * animatedWave
-                    val barColor = if (b % 2 == 0) primaryRingColor else secondaryArcColor.copy(alpha = 0.9f)
-                    drawRoundRect(
-                        color = barColor,
-                        topLeft = Offset(startX + b * spacing - 1.8.dp.toPx(), barCenterY - barHeight / 2f),
-                        size = Size(3.6.dp.toPx(), barHeight),
-                        cornerRadius = CornerRadius(4f, 4f)
-                    )
                 }
             }
 
-            // 7. Spaced Core Typography Overlay ("U.L.T.R.O.N" or "M.A.X" + "AI ASSISTANT")
+            // Central State Display Text
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = coreSize * 0.22f)
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .size(coreSize * 0.70f)
+                    .clip(CircleShape)
             ) {
-                Text(
-                    text = activePersona.coreSpacedTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = UltronTextPrimary,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 2.sp,
-                    fontSize = 15.sp
-                )
-                Text(
-                    text = "AI ASSISTANT",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = primaryRingColor.copy(alpha = 0.85f),
-                    letterSpacing = 1.5.sp,
-                    fontSize = 8.sp
-                )
+                when (coreState) {
+                    AssistantCoreState.IDLE -> {
+                        Text(
+                            text = "MAX",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = UltronTextPrimary,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.5.sp,
+                            fontSize = 15.sp
+                        )
+                        Text(
+                            text = "READY",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = primaryRingColor,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp,
+                            fontSize = 9.5.sp
+                        )
+                    }
+                    AssistantCoreState.WAKE_DETECTED -> {
+                        Text(
+                            text = "MAX",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = UltronTextPrimary,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.5.sp,
+                            fontSize = 15.sp
+                        )
+                        Text(
+                            text = "WAKE",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = UltronCyan,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp,
+                            fontSize = 9.5.sp
+                        )
+                    }
+                    AssistantCoreState.LISTENING -> {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = "LISTENING",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = UltronCyan,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp,
+                            fontSize = 10.5.sp
+                        )
+                    }
+                    AssistantCoreState.THINKING, AssistantCoreState.TRANSCRIBING -> {
+                        Text(
+                            text = "THINKING...",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = UltronViolet,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp,
+                            fontSize = 10.5.sp
+                        )
+                    }
+                    AssistantCoreState.EXECUTING -> {
+                        Text(
+                            text = "EXECUTING",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = UltronGold,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp,
+                            fontSize = 10.5.sp
+                        )
+                    }
+                    AssistantCoreState.SPEAKING -> {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = "SPEAKING",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = UltronEmerald,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp,
+                            fontSize = 10.5.sp
+                        )
+                    }
+                    AssistantCoreState.ERROR, AssistantCoreState.PERMISSION_BLOCKED -> {
+                        Text(
+                            text = "ERROR",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = UltronCrimson,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp,
+                            fontSize = 11.sp
+                        )
+                        Text(
+                            text = if (coreState == AssistantCoreState.PERMISSION_BLOCKED) "MIC BLOCKED" else "TAP TO FIX",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = UltronCrimson,
+                            fontSize = 8.5.sp
+                        )
+                    }
+                    else -> {
+                        Text(
+                            text = "MAX",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = UltronTextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = coreState.badgeLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = primaryRingColor,
+                            fontSize = 9.sp
+                        )
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(3.dp))
 
-        // Subtitle below core ("BOLO, KAISE HELP KARUN?" + State badge pill)
-        Text(
-            text = coreState.hinglishSubtitle,
-            style = MaterialTheme.typography.labelMedium,
-            color = UltronTextSecondary,
-            letterSpacing = 1.2.sp,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
+        // State Badge Pill below Core
         Surface(
-            color = primaryRingColor.copy(alpha = 0.14f),
+            color = primaryRingColor.copy(alpha = 0.12f),
             shape = RoundedCornerShape(50),
-            border = BorderStroke(1.dp, primaryRingColor.copy(alpha = 0.6f))
+            border = BorderStroke(1.dp, primaryRingColor.copy(alpha = 0.55f))
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 3.dp)
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.5.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(6.dp)
+                        .size(5.5.dp)
                         .clip(CircleShape)
                         .background(primaryRingColor)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "${activePersona.displayName.uppercase(Locale.ROOT)} • ${coreState.badgeLabel}",
+                    text = when (coreState) {
+                        AssistantCoreState.IDLE -> "MAX • READY"
+                        AssistantCoreState.WAKE_DETECTED -> "MAX • WAKE"
+                        AssistantCoreState.LISTENING -> "MAX • LISTENING"
+                        AssistantCoreState.THINKING, AssistantCoreState.TRANSCRIBING -> "MAX • THINKING..."
+                        AssistantCoreState.EXECUTING -> "MAX • EXECUTING"
+                        AssistantCoreState.SPEAKING -> "MAX • SPEAKING"
+                        AssistantCoreState.ERROR, AssistantCoreState.PERMISSION_BLOCKED -> "MAX • ERROR"
+                        else -> "${activePersona.displayName.uppercase(Locale.ROOT)} • ${coreState.badgeLabel}"
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = primaryRingColor,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 10.sp
                 )
             }
         }

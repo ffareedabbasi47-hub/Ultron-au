@@ -219,20 +219,20 @@ fun UltronAwaazStudioScreen(
                     color = UltronTextSecondary
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("ULTRON" to "ULTRON", "HEY ULTRON" to "HEY ULTRON", "HELLO ULTRON" to "HELLO ULTRON").forEach { (code, label) ->
+                    listOf("MAX" to "MAX", "HEY MAX" to "HEY MAX", "ULTRON" to "ULTRON", "HEY ULTRON" to "HEY ULTRON").forEach { (code, label) ->
                         FilterChip(
-                            selected = settings.wakeWordPhrase == code,
+                            selected = settings.wakeWordPhrase.equals(code, ignoreCase = true),
                             onClick = { onUpdateWakeConfig(settings.wakeWordEnabled, code) },
                             label = { Text(label, style = MaterialTheme.typography.labelSmall) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = UltronCyan.copy(alpha = 0.22f),
-                                selectedLabelColor = UltronCyan
+                                selectedContainerColor = UltronEmerald.copy(alpha = 0.22f),
+                                selectedLabelColor = UltronEmerald
                             )
                         )
                     }
                 }
 
-                // Controls: Enable, Disable, Test "ULTRON"
+                // Controls: Enable, Disable, Test "MAX"
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -252,13 +252,13 @@ fun UltronAwaazStudioScreen(
                         Text("Disable", color = UltronTextPrimary)
                     }
                     Button(
-                        onClick = { onTestWakeWord("ULTRON") },
-                        colors = ButtonDefaults.buttonColors(containerColor = UltronCyan),
+                        onClick = { onTestWakeWord("MAX") },
+                        colors = ButtonDefaults.buttonColors(containerColor = UltronEmerald),
                         modifier = Modifier
                             .weight(1.3f)
-                            .testTag("awaaz_test_ultron_button")
+                            .testTag("awaaz_test_max_button")
                     ) {
-                        Text("TEST \"ULTRON\"", color = UltronObsidian, fontWeight = FontWeight.Bold)
+                        Text("TEST \"MAX\"", color = UltronObsidian, fontWeight = FontWeight.Bold)
                     }
                 }
 

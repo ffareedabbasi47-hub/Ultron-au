@@ -147,6 +147,7 @@ fun UltronGharHomeScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // 1. Top Greeting & Persona Status Row
+            val userGreetingName = if (persona == AssistantPersona.MAX) "Boss" else settings.userAddress
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -156,7 +157,7 @@ fun UltronGharHomeScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Namaste, ${settings.userAddress}",
+                        text = "Namaste, $userGreetingName",
                         style = MaterialTheme.typography.titleLarge,
                         color = UltronTextPrimary,
                         fontWeight = FontWeight.Bold,
@@ -164,7 +165,7 @@ fun UltronGharHomeScreen(
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "Personal AI Assistant",
+                        text = "MAX • Personal AI Assistant",
                         style = MaterialTheme.typography.bodySmall,
                         color = personaAccent
                     )
@@ -174,11 +175,11 @@ fun UltronGharHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Real Defined Energy Score
+                    // Real RAM Telemetry Pill
                     Surface(
                         color = UltronSurfaceElevated.copy(alpha = cardAlpha),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, UltronGold.copy(alpha = 0.45f)),
+                        border = BorderStroke(1.dp, UltronCyan.copy(alpha = 0.5f)),
                         modifier = Modifier.clickable { onNavigate(UltronDestination.CONTROL_CENTER) }
                     ) {
                         Row(
@@ -186,14 +187,14 @@ fun UltronGharHomeScreen(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Bolt,
-                                contentDescription = "System Energy",
-                                tint = UltronGold,
+                                imageVector = Icons.Default.PhoneAndroid,
+                                contentDescription = "System RAM",
+                                tint = UltronCyan,
                                 modifier = Modifier.size(13.dp)
                             )
                             Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "${telemetry.realEnergyUnits} Energy",
+                                text = "RAM ${telemetry.ramPercent}%",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = UltronTextPrimary,
                                 fontWeight = FontWeight.Bold
