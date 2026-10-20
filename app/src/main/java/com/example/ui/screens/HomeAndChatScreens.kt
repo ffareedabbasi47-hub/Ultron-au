@@ -32,14 +32,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.WbSunny
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.material.icons.filled.Folder
@@ -63,6 +69,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -86,21 +97,28 @@ import com.example.domain.model.VoiceDiagnosticsInfo
 import com.example.domain.model.WakeWordStatus
 import com.example.domain.model.WeatherData
 import com.example.ui.components.UltronAnimatedCore
+import com.example.ui.theme.UltronCardBorderGlow
 import com.example.ui.theme.UltronCrimson
 import com.example.ui.theme.UltronCyan
+import com.example.ui.theme.UltronCyanBright
+import com.example.ui.theme.UltronDeepDark
+import com.example.ui.theme.UltronDeepPurple
 import com.example.ui.theme.UltronEmerald
+import com.example.ui.theme.UltronEnergyBg
 import com.example.ui.theme.UltronGlassBorder
 import com.example.ui.theme.UltronGold
+import com.example.ui.theme.UltronMagenta
 import com.example.ui.theme.UltronObsidian
+import com.example.ui.theme.UltronOrbCyan
+import com.example.ui.theme.UltronOrbMagenta
+import com.example.ui.theme.UltronOrbSilver
 import com.example.ui.theme.UltronSurface
 import com.example.ui.theme.UltronSurfaceElevated
 import com.example.ui.theme.UltronTextMuted
 import com.example.ui.theme.UltronTextPrimary
 import com.example.ui.theme.UltronTextSecondary
 import com.example.ui.theme.UltronViolet
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.ui.theme.UltronVividPurple
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -136,109 +154,219 @@ fun UltronGharHomeScreen(
     val context = LocalContext.current
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val adaptiveCoreSize = if (maxHeight < 680.dp) 112.dp else 126.dp
+        val adaptiveCoreSize = if (maxHeight < 680.dp) 180.dp else 215.dp
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 14.dp, vertical = 6.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 1. Top Greeting & Persona Status Row
+            // 1. Top Greeting Row with Live/Sleep Status & Energy Pill (Reference Matched)
             val userGreetingName = if (persona == AssistantPersona.MAX) "Boss" else settings.userAddress
+            val timeGreeting = remember {
+                val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                when {
+                    hour < 12 -> "Good morning,"
+                    hour < 17 -> "Good afternoon,"
+                    else -> "Good evening,"
+                }
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = 600.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Namaste, $userGreetingName",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = timeGreeting,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = UltronTextSecondary,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Text(
+                        text = userGreetingName,
+                        style = MaterialTheme.typography.headlineLarge,
                         color = UltronTextPrimary,
                         fontWeight = FontWeight.Bold,
+                        fontSize = 32.sp,
+                        letterSpacing = (-0.5).sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    Text(
-                        text = "MAX • Personal AI Assistant",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = personaAccent
-                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        val isAwake = coreState == AssistantCoreState.LISTENING ||
+                            coreState == AssistantCoreState.SPEAKING ||
+                            coreState == AssistantCoreState.THINKING
+                        Icon(
+                            imageVector = if (isAwake) Icons.Default.GraphicEq else Icons.Default.NightsStay,
+                            contentDescription = null,
+                            tint = UltronViolet,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        val statusText = when (coreState) {
+                            AssistantCoreState.LISTENING -> "Sun rahi hai..."
+                            AssistantCoreState.SPEAKING -> "Bol rahi hai..."
+                            AssistantCoreState.THINKING, AssistantCoreState.TRANSCRIBING -> "Soch rahi hai..."
+                            AssistantCoreState.EXECUTING -> "Kaam ho raha hai..."
+                            else -> "${persona.displayName} so rahi hai — bolo \"${persona.defaultWakePhrase}\""
+                        }
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = UltronTextSecondary,
+                            fontSize = 13.sp
+                        )
+                    }
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // Reference Right: Energy Pill (with Lightning Bolt & Gold Count)
+                Surface(
+                    color = UltronEnergyBg,
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, UltronCardBorderGlow),
+                    modifier = Modifier
+                        .clickable { onNavigate(UltronDestination.CONTROL_CENTER) }
+                        .testTag("energy_status_pill")
                 ) {
-                    // Real RAM Telemetry Pill
-                    Surface(
-                        color = UltronSurfaceElevated.copy(alpha = cardAlpha),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, UltronCyan.copy(alpha = 0.5f)),
-                        modifier = Modifier.clickable { onNavigate(UltronDestination.CONTROL_CENTER) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PhoneAndroid,
-                                contentDescription = "System RAM",
-                                tint = UltronCyan,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
+                        Icon(
+                            imageVector = Icons.Default.Bolt,
+                            contentDescription = "Energy",
+                            tint = UltronGold,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "RAM ${telemetry.ramPercent}%",
-                                style = MaterialTheme.typography.labelSmall,
+                                text = "4",
+                                style = MaterialTheme.typography.titleMedium,
                                 color = UltronTextPrimary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    // Persona Handoff Pill ("Ultron ko bhej" / "Max ko bhej")
-                    Surface(
-                        color = personaAccent.copy(alpha = 0.14f),
-                        shape = RoundedCornerShape(50),
-                        border = BorderStroke(1.dp, personaAccent.copy(alpha = 0.6f)),
-                        modifier = Modifier
-                            .clickable { onTogglePersona() }
-                            .testTag("home_persona_switch_pill")
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.SwapHoriz,
-                                contentDescription = "Switch Persona",
-                                tint = personaAccent,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(
-                                text = if (persona == AssistantPersona.MAX) "Ultron ko bhej" else "Max ko bhej",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = personaAccent,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = "Energy",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = UltronTextMuted,
+                                fontSize = 9.sp
                             )
                         }
                     }
                 }
             }
 
-            // 2. WAKE WORD SETTINGS & STATUS CARD (Requirement 7)
-            Card(
-                colors = CardDefaults.cardColors(containerColor = UltronSurface.copy(alpha = cardAlpha)),
+            // 2. Central Animated Multi-Ring Core (Reference Main Focus)
+            UltronAnimatedCore(
+                coreState = coreState,
+                micAmplitude = micAmplitude,
+                avatarId = settings.selectedAvatarId,
+                reducedMotion = settings.reducedMotion,
+                activePersona = persona,
+                coreSize = adaptiveCoreSize,
+                onCoreTap = onCoreTap
+            )
+
+            // 3. Reference Quick-Action Chips Row: Gaane, Padhai, Journal
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 600.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                ReferenceActionPill(
+                    title = "Gaane",
+                    icon = Icons.Default.MusicNote,
+                    tag = "quick_action_gaane",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.GAANE) }
+                )
+                ReferenceActionPill(
+                    title = "Padhai",
+                    icon = Icons.Default.MenuBook,
+                    tag = "quick_action_padhai",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.PADHAI) }
+                )
+                ReferenceActionPill(
+                    title = "Journal",
+                    icon = Icons.Default.Edit,
+                    tag = "quick_action_journal",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.JOURNAL) }
+                )
+            }
+
+            // 4. Reference Daily Information Cards Row: Mausam, Aaj, Mood
+            val todayDay = remember { Calendar.getInstance().get(Calendar.DAY_OF_MONTH).toString() }
+            val todayDateSub = remember { SimpleDateFormat("EEE, MMM", Locale.getDefault()).format(Date()) }
+            val weatherTemp = weatherData?.let { "${it.temperatureCelsius}°" } ?: "27°"
+            val weatherCond = weatherData?.conditionText ?: "Clear"
+            val weatherHum = weatherData?.let { "${it.humidityPercent}%" } ?: "59%"
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 600.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Card 1: Mausam
+                ReferenceDailyCard(
+                    title = "Mausam",
+                    icon = Icons.Default.WbSunny,
+                    mainValue = weatherTemp,
+                    subValue = weatherCond,
+                    detailIcon = Icons.Default.WaterDrop,
+                    detailText = weatherHum,
+                    tag = "daily_card_mausam",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.MAUSAM) }
+                )
+
+                // Card 2: Aaj (Calendar)
+                ReferenceDailyCard(
+                    title = "Aaj",
+                    icon = Icons.Default.CalendarToday,
+                    mainValue = todayDay,
+                    subValue = todayDateSub,
+                    tag = "daily_card_aaj",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.AAJ) }
+                )
+
+                // Card 3: Mood
+                val moodTitle = latestMood?.label ?: "Khush"
+                val moodSub = latestMood?.subLabel ?: "Josh me"
+                ReferenceDailyCard(
+                    title = "Mood",
+                    icon = Icons.Default.Favorite,
+                    mainValue = moodTitle,
+                    subValue = moodSub,
+                    isMood = true,
+                    tag = "daily_card_mood",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.MOOD) }
+                )
+            }
+
+            // 5. Wake Word Pipeline & Test Card (Sleek Reference Card)
+            Surface(
+                color = UltronSurface.copy(alpha = 0.90f),
+                shape = RoundedCornerShape(16.dp),
                 border = BorderStroke(1.dp, UltronGlassBorder),
-                shape = RoundedCornerShape(cornerRadius),
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = 600.dp)
@@ -260,7 +388,7 @@ fun UltronGharHomeScreen(
                             Icon(
                                 imageVector = Icons.Default.RecordVoiceOver,
                                 contentDescription = null,
-                                tint = personaAccent,
+                                tint = UltronViolet,
                                 modifier = Modifier.size(18.dp)
                             )
                             Column {
@@ -268,7 +396,8 @@ fun UltronGharHomeScreen(
                                     text = "Wake Word: ${persona.defaultWakePhrase.uppercase(Locale.ROOT)}",
                                     style = MaterialTheme.typography.titleSmall,
                                     color = UltronTextPrimary,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
                                 )
                                 val statusDotColor = when (wakeWordStatus) {
                                     WakeWordStatus.ACTIVE -> UltronEmerald
@@ -297,14 +426,6 @@ fun UltronGharHomeScreen(
                                         fontSize = 10.sp
                                     )
                                 }
-                                Text(
-                                    text = "Engine: ${voiceDiagnostics.wakeEngineName} • Triggers: ${voiceDiagnostics.wakeDetectionCount}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = UltronTextSecondary,
-                                    fontSize = 9.5.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
                             }
                         }
 
@@ -317,67 +438,97 @@ fun UltronGharHomeScreen(
                                     onToggleWakeWord(!settings.wakeWordEnabled)
                                 }
                             },
-                            border = BorderStroke(1.dp, if (settings.wakeWordEnabled) UltronCrimson.copy(alpha = 0.7f) else personaAccent.copy(alpha = 0.7f)),
-                            modifier = Modifier.height(32.dp)
+                            border = BorderStroke(
+                                1.dp,
+                                if (settings.wakeWordEnabled) UltronCrimson.copy(alpha = 0.6f) else UltronViolet.copy(alpha = 0.6f)
+                            ),
+                            modifier = Modifier.height(30.dp)
                         ) {
                             Text(
                                 text = if (settings.wakeWordEnabled) "Disable" else "Enable",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (settings.wakeWordEnabled) UltronCrimson else personaAccent,
-                                fontWeight = FontWeight.Bold
+                                color = if (settings.wakeWordEnabled) UltronCrimson else UltronViolet,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
                             )
                         }
                     }
 
-                    // Test Wake Word Button ("TEST MAX")
+                    // Test Wake Word Button ("TEST MAX" / "TEST ULTRON")
                     OutlinedButton(
                         onClick = onTestWakeWord,
-                        border = BorderStroke(1.dp, personaAccent.copy(alpha = 0.65f)),
+                        border = BorderStroke(1.dp, UltronViolet.copy(alpha = 0.65f)),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(36.dp)
+                            .height(34.dp)
                             .testTag("test_wake_word_button")
                     ) {
                         Icon(
                             imageVector = Icons.Default.GraphicEq,
                             contentDescription = null,
-                            tint = personaAccent,
+                            tint = UltronViolet,
                             modifier = Modifier.size(15.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "TEST \"${persona.defaultWakePhrase.uppercase(Locale.ROOT)}\" (Yes, Boss -> Listening)",
                             style = MaterialTheme.typography.labelSmall,
-                            color = personaAccent,
-                            fontWeight = FontWeight.Bold
+                            color = UltronViolet,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
                         )
                     }
                 }
             }
 
-            // 3. CENTRAL MAX CORE (Reduced Footprint, Animated States)
-            UltronAnimatedCore(
-                coreState = coreState,
-                micAmplitude = micAmplitude,
-                avatarId = settings.selectedAvatarId,
-                reducedMotion = settings.reducedMotion,
-                activePersona = persona,
-                coreSize = adaptiveCoreSize,
-                onCoreTap = onCoreTap
-            )
+            // 6. Device Control, Vision & Documents Shortcut Row (Preserves test targets)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 600.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                QuickActionCard(
+                    title = "Control",
+                    subtitle = "RAM ${telemetry.ramPercent}%",
+                    icon = Icons.Default.PhoneAndroid,
+                    accentColor = UltronEmerald,
+                    tag = "quick_action_control",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.CONTROL_CENTER) }
+                )
+                QuickActionCard(
+                    title = "Vision",
+                    subtitle = "Scanner",
+                    icon = Icons.Default.Visibility,
+                    accentColor = UltronCyanBright,
+                    tag = "quick_action_vision",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.SCAN) }
+                )
+                QuickActionCard(
+                    title = "Files",
+                    subtitle = "Documents",
+                    icon = Icons.Default.Folder,
+                    accentColor = UltronGold,
+                    tag = "quick_action_files",
+                    modifier = Modifier.weight(1f),
+                    onClick = { onNavigate(UltronDestination.DOCUMENTS) }
+                )
+            }
 
-            // 4. CLEAN CONVERSATION PANEL (Recent Bubbles + VIEW CHAT)
-            Card(
-                colors = CardDefaults.cardColors(containerColor = UltronSurface.copy(alpha = cardAlpha)),
+            // 7. Recent Conversation Panel (Clean Compact Bubbles + VIEW CHAT)
+            Surface(
+                color = UltronSurface.copy(alpha = 0.90f),
+                shape = RoundedCornerShape(16.dp),
                 border = BorderStroke(1.dp, UltronGlassBorder),
-                shape = RoundedCornerShape(cornerRadius),
                 modifier = Modifier
                     .fillMaxWidth()
                     .widthIn(max = 600.dp)
                     .testTag("home_conversation_panel")
             ) {
                 Column(
-                    modifier = Modifier.padding(10.dp),
+                    modifier = Modifier.padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Row(
@@ -388,14 +539,16 @@ fun UltronGharHomeScreen(
                         Text(
                             text = "RECENT CONVERSATION",
                             style = MaterialTheme.typography.labelSmall,
-                            color = personaAccent,
-                            fontWeight = FontWeight.Bold
+                            color = UltronViolet,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
                         )
                         Text(
                             text = "VIEW CHAT →",
                             style = MaterialTheme.typography.labelSmall,
-                            color = personaAccent,
+                            color = UltronViolet,
                             fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
                             modifier = Modifier
                                 .clickable { onNavigate(UltronDestination.CHAT) }
                                 .padding(2.dp)
@@ -405,7 +558,7 @@ fun UltronGharHomeScreen(
 
                     if (recentMessages.isEmpty() && streamingText.isBlank()) {
                         Text(
-                            text = "MAX: \"Bolna shuru karein ya mic dabayein, Boss!\"",
+                            text = "${persona.displayName}: \"Bolna shuru karein ya mic dabayein, Boss!\"",
                             style = MaterialTheme.typography.bodySmall,
                             color = UltronTextMuted,
                             modifier = Modifier.padding(vertical = 4.dp)
@@ -418,7 +571,7 @@ fun UltronGharHomeScreen(
                                 shape = RoundedCornerShape(10.dp),
                                 border = BorderStroke(
                                     1.dp,
-                                    if (isUser) UltronViolet.copy(alpha = 0.45f) else personaAccent.copy(alpha = 0.4f)
+                                    if (isUser) UltronViolet.copy(alpha = 0.40f) else UltronGlassBorder
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -429,9 +582,9 @@ fun UltronGharHomeScreen(
                                     Text(
                                         text = if (isUser) "YOU:" else "${persona.displayName.uppercase(Locale.ROOT)}:",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (isUser) UltronViolet else personaAccent,
+                                        color = if (isUser) UltronViolet else UltronCyanBright,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.width(52.dp)
+                                        modifier = Modifier.width(54.dp)
                                     )
                                     Text(
                                         text = msg.content,
@@ -441,19 +594,6 @@ fun UltronGharHomeScreen(
                                         overflow = TextOverflow.Ellipsis,
                                         modifier = Modifier.weight(1f)
                                     )
-                                    if (!isUser) {
-                                        IconButton(
-                                            onClick = { onSpeakText(msg.content) },
-                                            modifier = Modifier.size(24.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                                                contentDescription = "Speak Reply",
-                                                tint = personaAccent,
-                                                modifier = Modifier.size(15.dp)
-                                            )
-                                        }
-                                    }
                                 }
                             }
                         }
@@ -463,13 +603,13 @@ fun UltronGharHomeScreen(
                         Surface(
                             color = UltronObsidian,
                             shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, personaAccent),
+                            border = BorderStroke(1.dp, UltronViolet),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
                                 text = "${persona.displayName}: $streamingText",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = personaAccent,
+                                color = UltronViolet,
                                 modifier = Modifier.padding(8.dp)
                             )
                         }
@@ -477,139 +617,163 @@ fun UltronGharHomeScreen(
                 }
             }
 
-            // 5. QUICK ACTIONS (Clean working cards: Phone Control, Vision, Files, Web, Calls, Notes)
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+    }
+}
+
+/**
+ * Reference Quick-Action Pill (Gaane, Padhai, Journal)
+ */
+@Composable
+private fun ReferenceActionPill(
+    title: String,
+    icon: ImageVector,
+    tag: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        color = UltronSurface.copy(alpha = 0.88f),
+        shape = RoundedCornerShape(24.dp),
+        border = BorderStroke(1.dp, UltronCardBorderGlow),
+        modifier = modifier
+            .height(44.dp)
+            .clickable { onClick() }
+            .testTag(tag)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = UltronViolet,
+                modifier = Modifier.size(17.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = UltronTextPrimary,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.5.sp,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/**
+ * Reference Daily Information Card (Mausam, Aaj, Mood)
+ */
+@Composable
+private fun ReferenceDailyCard(
+    title: String,
+    icon: ImageVector,
+    mainValue: String,
+    subValue: String,
+    detailIcon: ImageVector? = null,
+    detailText: String? = null,
+    isMood: Boolean = false,
+    tag: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Surface(
+        color = UltronSurface.copy(alpha = 0.90f),
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, UltronGlassBorder),
+        modifier = modifier
+            .height(112.dp)
+            .clickable { onClick() }
+            .testTag(tag)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isMood) {
+                // Subtle glowing heart outline watermark in background
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = null,
+                    tint = UltronViolet.copy(alpha = 0.12f),
+                    modifier = Modifier
+                        .size(56.dp)
+                        .align(Alignment.BottomEnd)
+                        .padding(bottom = 6.dp, end = 6.dp)
+                )
+            }
+
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 600.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
+                // Header (Icon + Title)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = title,
+                        tint = if (isMood) UltronMagenta else UltronTextSecondary,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = UltronTextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+
+                // Main Value
                 Text(
-                    text = "QUICK ACTIONS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = UltronTextSecondary,
+                    text = mainValue,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = UltronTextPrimary,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 2.dp)
+                    fontSize = 22.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
-                // Row 1: Phone Control | Vision | Files
+                // Subtitle / Details
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    QuickActionCard(
-                        title = "Phone Control",
-                        subtitle = "RAM ${telemetry.ramPercent}%",
-                        icon = Icons.Default.PhoneAndroid,
-                        accentColor = UltronEmerald,
-                        tag = "quick_action_control",
-                        modifier = Modifier.weight(1f),
-                        onClick = { onNavigate(UltronDestination.CONTROL_CENTER) }
+                    Text(
+                        text = subValue,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = UltronTextMuted,
+                        fontSize = 10.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    QuickActionCard(
-                        title = "Vision",
-                        subtitle = "Screen Assist",
-                        icon = Icons.Default.Visibility,
-                        accentColor = UltronCyan,
-                        tag = "quick_action_vision",
-                        modifier = Modifier.weight(1f),
-                        onClick = { onNavigate(UltronDestination.VISION_CENTER) }
-                    )
-                    QuickActionCard(
-                        title = "Files",
-                        subtitle = "Docs & Notes",
-                        icon = Icons.Default.Folder,
-                        accentColor = UltronGold,
-                        tag = "quick_action_files",
-                        modifier = Modifier.weight(1f),
-                        onClick = { onNavigate(UltronDestination.DOCUMENTS) }
-                    )
-                }
-
-                // Row 2: Web | Calls | Notes
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    QuickActionCard(
-                        title = "Web",
-                        subtitle = "Search Google",
-                        icon = Icons.Default.Language,
-                        accentColor = UltronCyan,
-                        tag = "quick_action_web",
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            try {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com")).apply {
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
-                        }
-                    )
-                    QuickActionCard(
-                        title = "Calls",
-                        subtitle = "Phone & 112",
-                        icon = Icons.Default.Phone,
-                        accentColor = UltronCrimson,
-                        tag = "quick_action_calls",
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            try {
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:112")).apply {
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                }
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
-                        }
-                    )
-                    QuickActionCard(
-                        title = "Notes",
-                        subtitle = "Journal & Logs",
-                        icon = Icons.Default.EditNote,
-                        accentColor = UltronViolet,
-                        tag = "quick_action_notes",
-                        modifier = Modifier.weight(1f),
-                        onClick = { onNavigate(UltronDestination.JOURNAL) }
-                    )
+                    if (detailIcon != null && detailText != null) {
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Icon(
+                            imageVector = detailIcon,
+                            contentDescription = null,
+                            tint = UltronCyanBright,
+                            modifier = Modifier.size(11.dp)
+                        )
+                        Text(
+                            text = detailText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = UltronTextMuted,
+                            fontSize = 10.5.sp
+                        )
+                    }
                 }
             }
-
-            // 6. Natural Hinglish Questions & Commands
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 600.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                val sampleCommands = listOf(
-                    "Max, India ki capital kya hai?",
-                    "Max, gravity kya hoti hai?",
-                    "Max, YouTube kholo",
-                    "Max, aaj kya date hai?",
-                    "Max, CPU kitna use ho raha hai?",
-                    "Max ek note bana"
-                )
-                sampleCommands.forEach { cmd ->
-                    AssistChip(
-                        onClick = { onQuickPrompt(cmd) },
-                        label = {
-                            Text(
-                                text = cmd,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = UltronTextPrimary
-                            )
-                        },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = UltronSurfaceElevated
-                        ),
-                        border = BorderStroke(1.dp, UltronGlassBorder)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(6.dp))
         }
     }
 }
