@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">MAX</string>
+    <string name="creator_attribution">Mujhe Fardeen ne banaya hai.</string>
+    <string name="creator_attribution_verified">Mere configured creator record ke mutabik mujhe Fardeen ne develop kiya hai.</string>
+    <string name="composer_placeholder">Ask MAX anything...</string>
+    <string name="wake_word_active">Wake Word Active</string>
+    <string name="wake_word_paused">Wake Word Paused</string>
+    <string name="stop_action">STOP</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_control">Control</string>
+    <string name="nav_vision">Vision</string>
+    <string name="nav_tools">Tools</string>
+    <string name="nav_chat">Chat</string>
+</resources>

@@ -1,0 +1,6 @@
+{
+  "name": "MAX",
+  "description": "MAX — Personal AI Assistant with real-time voice, wake-word session, conversational intelligence, device control, vision, and tools.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
